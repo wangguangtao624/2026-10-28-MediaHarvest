@@ -1,0 +1,27 @@
+# ---- 运行时产物 / 大体积目录（绝不提交）----
+# ASR 模型与抓取缓存（3.6G+）
+.cache/
+# 临时产物
+.tmp/
+# 采集输出（Markdown / 媒体文件）
+out/
+# 本地模型目录
+models/
+
+# ---- 私有数据（含真实 cookie 凭证，绝不提交！）----
+data/
+*.db
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ---- 工具 / IDE / 系统 ----
+.workbuddy/
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini

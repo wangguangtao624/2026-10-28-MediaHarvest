@@ -1,57 +1,34 @@
-# MediaHarvest
+# 拾录 · 视频逐字稿
 
-多平台内容采集 → 本地语音转录 → Markdown 知识库。把 B 站视频、抖音视频、小红书笔记一键「收割」成结构化的 Obsidian 笔记。
+一个用途：把抖音链接或本地音视频整理成 Markdown 逐字稿。已移除知识库、问答、研究、画布和旧桌面界面及其测试。
 
-## 功能特性
+## 使用
 
-- **多平台采集**
-  - **Bilibili**：视频 + 弹幕 + 评论，无需登录即可采集公开内容
-  - **抖音**：视频 + 评论
-  - **小红书**：视频/图文笔记 + 评论；支持关键词搜索、话题聚合页抓取、博主主页批量抓取
-- **本地语音转录**：基于 faster-whisper，支持 GPU（CUDA）加速与 CPU 自动回退，模型自动下载缓存
-- **Markdown 知识库**：YAML frontmatter（来源、作者、时长、标签、采集时间）+ 正文 + 媒体链接，文件名规范、适合 Obsidian 直接建库
-- **采集历史**：SQLite 记录每条采集状态，可在 GUI 历史页查看与预览
-- **稳健的反爬应对**：浏览器指纹 HTTP 客户端（curl_cffi）、请求签名自动生成、限流退避重试（指数退避 + 随机抖动）、明确的错误提示（区分限流 / 登录态失效 / 业务错误）
+当前电脑双击「启动.bat」，打开 http://127.0.0.1:8765。
 
-## 环境要求
+1. 选择保存目录，填写主题，或选择已有主题文件夹。
+2. 粘贴/拖入抖音作品、博主主页链接；也可导入包含链接的 txt，或上传音视频文件。
+3. 点击读取标题，勾选需要的视频，再开始整理。主页默认读取 100 条。
+4. 每个视频保存一个文件：`保存目录/主题/YYYY-MM-DD 标题.md`。日期优先用作品发布日期，本地文件使用整理日期。文件包含主题、精简总结、来源和逐字稿原文。重复整理相同视频会更新同一文件。
 
-- Windows / macOS / Linux
-- Python 3.10+
-- 转录视频需要 [FFmpeg](https://ffmpeg.org/)（加入 PATH）
-- GPU 转录需 NVIDIA 显卡 + CUDA 环境（可选，纯 CPU 也能跑）
+默认通过日日新 API 生成总结；语音识别在本机执行。高级设置可保存日日新 API Key 和抖音 Cookie。Windows 下密钥以当前用户 DPAPI 加密保存，不随安装包分发。原项目的日日新凭证会自动迁移。
 
-## 安装与启动
+## 安装到新电脑
 
-```bash
-pip install -r requirements.txt
-python gui.py        # 图形界面
-python run.py --help # 命令行模式
-```
+需要 Windows、Python 3.10+、Chrome 或 Edge。运行 `powershell -ExecutionPolicy Bypass -File setup.ps1`，然后双击「启动.bat」。首次启动需要下载语音模型；有 NVIDIA 驱动时安装脚本会安装 CUDA 运行库依赖。无 Chrome/Edge 时可执行 `.venv\Scripts\python -m playwright install chromium`。
 
-## 小红书 Cookie 配置
+模型、凭证、浏览器登录态和输出文件均留在本机。安装包不包含这些内容。退出运行服务的终端可停止服务。
 
-小红书接口需要登录态。从浏览器导出 cookie（必须包含 `a1` 与 `web_session` 两个字段），粘贴到 GUI 的 cookie 管理页验证即可。
+## 默认速度设置
 
-> ⚠️ 高频请求会导致会话被服务端直接作废（code -100），此时只能重新导出 cookie。请合理设置采集条数，避免连续大量搜索。
+small 语音模型，CUDA float16，GPU 转录并行 2、批大小 16、下载并行 4、总结并行 2。下载、转录和总结可以同时推进；重试优先复用已完成的转录。GPU 不可用时界面显示原因；显式选择 CUDA 时不会悄悄切回 CPU。
 
-## 目录结构
+本机 RTX 5070 Ti Laptop 12GB 的实测见 `验证说明.md`。增加并行数不一定更快：本次 4 路 GPU 的总吞吐低于 2 路。GPU 只负责转录，网络下载、抖音页面加载和远程 API 总结期间低利用率正常。
 
-```
-mediaharvest/
-├── app/
-│   ├── crawler/      # 各平台抓取与签名
-│   ├── asr/          # faster-whisper 本地转录引擎
-│   ├── core/         # 配置、cookie 管理、数据模型
-│   ├── ui/           # PyQt5 界面
-│   ├── export/       # Markdown 导出
-│   ├── downloader.py # 媒体下载
-│   └── pipeline.py   # 采集→转录→导出 流水线
-├── docs/             # 设计文档
-├── test_*.py         # 测试脚本（python test_xhs_parse.py 直接运行）
-├── gui.py            # GUI 入口
-└── run.py            # CLI 入口
-```
+主页只能读取 21 条的问题已修复：抖音后续分页响应来自 www-hj.douyin.com，旧逻辑只识别 www.douyin.com。新版本通过正常浏览器收集相同接口的各分页响应，已验证指定主页返回 100 条。若平台要求验证，点击高级设置中的浏览器验证并手动完成，再重试。
 
-## 免责声明
+## 维护
 
-本项目仅供学习与研究用途。请遵守目标平台的服务条款，尊重内容创作者的版权，采集内容请勿用于商业用途或二次分发。使用本项目产生的任何后果由使用者自行承担。
+代码在 app/，入口 web.py，无前端构建步骤。基础测试：`.venv\Scripts\python -m unittest discover -s tests -v`。requirements.lock.txt 记录本次验证环境；常规安装使用 requirements.txt 或 requirements-gpu.txt。
+
+旧 data/workbench 保留作凭证迁移和复用已下载媒体，界面不再提供知识库。原始源码压缩包和旧版本安装包仍在上级目录，便于回退。

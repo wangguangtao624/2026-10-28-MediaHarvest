@@ -19,9 +19,15 @@ __pycache__/
 .venv/
 venv/
 
+# ---- 审计/重构临时产物 ----
+artifacts/
+
 # ---- 工具 / IDE / 系统 ----
 .workbuddy/
 .idea/
 .vscode/
 Thumbs.db
 Desktop.ini
+
+# Transcript outputs
+/逐字稿/
